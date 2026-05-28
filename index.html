@@ -1,0 +1,914 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>cs thingy</title>
+  <style>
+    :root {
+      --ink: #fff7ed;
+      --muted: rgba(255, 247, 237, 0.72);
+      --panel: rgba(11, 14, 22, 0.78);
+      --line: rgba(255, 255, 255, 0.18);
+      --gold: #ffd36e;
+      --rose: #f28aa2;
+      --mint: #80d6bb;
+      --bad: #ff9a8a;
+    }
+
+    * { box-sizing: border-box; }
+
+    html,
+    body {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      overflow: hidden;
+      background: #090c12;
+      color: var(--ink);
+      font-family: "Segoe UI", system-ui, sans-serif;
+    }
+
+    button,
+    input,
+    select,
+    textarea {
+      font: inherit;
+    }
+
+    button {
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 8px;
+      min-height: 42px;
+      padding: 0 14px;
+      background: var(--gold);
+      color: #15120a;
+      font-weight: 800;
+      cursor: pointer;
+    }
+
+    button.secondary {
+      background: rgba(255, 255, 255, 0.1);
+      color: var(--ink);
+    }
+
+    input,
+    select,
+    textarea {
+      width: 100%;
+      border: 1px solid rgba(255, 255, 255, 0.22);
+      border-radius: 8px;
+      padding: 0 12px;
+      background: rgba(0, 0, 0, 0.38);
+      color: var(--ink);
+      outline: none;
+    }
+
+    input,
+    select {
+      height: 44px;
+    }
+
+    textarea {
+      min-height: 92px;
+      padding: 10px 12px;
+      resize: vertical;
+      line-height: 1.35;
+    }
+
+    .app {
+      position: fixed;
+      inset: 0;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 360px;
+      background:
+        radial-gradient(circle at 12% 18%, rgba(255, 211, 110, 0.14), transparent 32%),
+        radial-gradient(circle at 88% 14%, rgba(128, 214, 187, 0.12), transparent 34%),
+        #090c12;
+    }
+
+    .stage {
+      position: relative;
+      min-width: 0;
+      overflow: hidden;
+      background: #111723;
+    }
+
+    .scene-image {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      filter: saturate(1.08) contrast(1.04);
+      transform: scale(1.03);
+    }
+
+    .vignette {
+      position: absolute;
+      inset: 0;
+      background:
+        linear-gradient(90deg, rgba(5, 7, 12, 0.16), transparent 25%, rgba(5, 7, 12, 0.4)),
+        radial-gradient(circle at center, transparent 42%, rgba(0, 0, 0, 0.55));
+      pointer-events: none;
+    }
+
+    .hotspot {
+      position: absolute;
+      width: 42px;
+      height: 42px;
+      border-radius: 999px;
+      border: 2px solid rgba(255, 255, 255, 0.75);
+      background:
+        radial-gradient(circle, rgba(255, 255, 255, 0.95), rgba(255, 211, 110, 0.78) 34%, rgba(255, 211, 110, 0.14) 68%, transparent 69%);
+      box-shadow: 0 0 24px rgba(255, 211, 110, 0.86);
+      transform: translate(-50%, -50%);
+      animation: pulse 1.5s ease-in-out infinite;
+    }
+
+    .hotspot.found {
+      background: rgba(128, 214, 187, 0.24);
+      border-color: rgba(128, 214, 187, 0.8);
+      box-shadow: 0 0 20px rgba(128, 214, 187, 0.55);
+      animation: none;
+    }
+
+    @keyframes pulse {
+      0%, 100% { transform: translate(-50%, -50%) scale(0.92); }
+      50% { transform: translate(-50%, -50%) scale(1.08); }
+    }
+
+    .topbar {
+      position: absolute;
+      left: 16px;
+      top: 16px;
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      z-index: 3;
+    }
+
+    .pill {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 9px 11px;
+      background: rgba(11, 14, 22, 0.68);
+      backdrop-filter: blur(12px);
+      box-shadow: 0 12px 32px rgba(0, 0, 0, 0.28);
+    }
+
+    .letters {
+      display: flex;
+      gap: 6px;
+      font-weight: 950;
+    }
+
+    .letter {
+      display: grid;
+      width: 32px;
+      height: 32px;
+      place-items: center;
+      border: 1px solid rgba(255, 255, 255, 0.24);
+      border-radius: 6px;
+      color: rgba(255, 255, 255, 0.42);
+      background: rgba(255, 255, 255, 0.08);
+    }
+
+    .letter.filled {
+      color: #18120a;
+      background: var(--gold);
+      box-shadow: 0 0 20px rgba(255, 211, 110, 0.72);
+    }
+
+    .sidebar {
+      display: grid;
+      grid-template-rows: auto 1fr auto;
+      gap: 14px;
+      padding: 16px;
+      border-left: 1px solid var(--line);
+      background: rgba(9, 12, 18, 0.9);
+      overflow: hidden;
+    }
+
+    .scene-title {
+      margin: 0;
+      font-size: clamp(1.7rem, 4vw, 2.4rem);
+      line-height: 1;
+      letter-spacing: 0;
+    }
+
+    .eyebrow {
+      margin: 0 0 8px;
+      color: var(--mint);
+      font-size: 0.76rem;
+      font-weight: 900;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+
+    p {
+      color: var(--muted);
+      line-height: 1.48;
+    }
+
+    .clue-log {
+      min-height: 0;
+      overflow: auto;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 12px;
+      background: rgba(255, 255, 255, 0.06);
+    }
+
+    .clue-log h3 {
+      margin: 0 0 8px;
+      font-size: 1rem;
+    }
+
+    .clue-log ul {
+      display: grid;
+      gap: 8px;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .clue-log li {
+      border-left: 3px solid rgba(255, 211, 110, 0.72);
+      padding: 8px 10px;
+      background: rgba(0, 0, 0, 0.18);
+      color: var(--muted);
+      font-size: 0.92rem;
+      line-height: 1.35;
+    }
+
+    .text-image {
+      display: block;
+      width: 100%;
+      max-height: 220px;
+      margin-top: 10px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      object-fit: cover;
+      background: rgba(255, 255, 255, 0.08);
+    }
+
+    .password-box {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 12px;
+      background: rgba(255, 255, 255, 0.06);
+    }
+
+    .row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    .feedback {
+      min-height: 22px;
+      margin-top: 9px;
+      color: var(--bad);
+      font-weight: 750;
+      font-size: 0.92rem;
+    }
+
+    .modal {
+      position: fixed;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      padding: 18px;
+      background: rgba(3, 5, 10, 0.62);
+      backdrop-filter: blur(12px);
+      z-index: 8;
+    }
+
+    .modal.hidden,
+    .hidden {
+      display: none;
+    }
+
+    .panel {
+      width: min(620px, 100%);
+      border: 1px solid rgba(255, 255, 255, 0.22);
+      border-radius: 8px;
+      padding: clamp(20px, 5vw, 38px);
+      background: rgba(11, 14, 22, 0.94);
+      box-shadow: 0 28px 90px rgba(0, 0, 0, 0.46);
+    }
+
+    .panel h1,
+    .panel h2 {
+      margin: 0;
+      line-height: 1;
+      letter-spacing: 0;
+    }
+
+    .panel h1 {
+      font-size: clamp(3.6rem, 14vw, 7.2rem);
+    }
+
+    .panel h2 {
+      font-size: clamp(2.2rem, 10vw, 5.8rem);
+    }
+
+    .editor-panel {
+      width: min(980px, 100%);
+      max-height: calc(100vh - 36px);
+      overflow: auto;
+    }
+
+    .editor-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+      margin-top: 16px;
+    }
+
+    .field {
+      display: grid;
+      gap: 6px;
+    }
+
+    .field.wide {
+      grid-column: 1 / -1;
+    }
+
+    .field label {
+      color: var(--muted);
+      font-size: 0.84rem;
+      font-weight: 750;
+    }
+
+    .clue-editor {
+      display: grid;
+      grid-template-columns: 80px 80px minmax(0, 1fr) auto;
+      gap: 8px;
+      align-items: end;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 10px;
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    .clue-editor textarea {
+      grid-column: 1 / -1;
+      min-height: 78px;
+    }
+
+    .clue-image-fields {
+      grid-column: 1 / -1;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+      gap: 8px;
+    }
+
+    .image-preview {
+      grid-column: 1 / -1;
+      max-width: 220px;
+      max-height: 120px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      object-fit: cover;
+    }
+
+    .editor-note {
+      margin-bottom: 0;
+      font-size: 0.9rem;
+    }
+
+    @media (max-width: 860px) {
+      .app {
+        grid-template-columns: 1fr;
+        grid-template-rows: minmax(0, 1fr) 310px;
+      }
+
+      .sidebar {
+        border-left: 0;
+        border-top: 1px solid var(--line);
+      }
+
+      .editor-grid,
+      .clue-editor,
+      .clue-image-fields {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <section class="stage" aria-label="Current memory scene">
+      <img class="scene-image" id="sceneImage" alt="">
+      <div class="vignette"></div>
+      <div class="topbar">
+        <div class="pill letters" id="letters"></div>
+        <div class="pill" id="floorPill">Floor 1/5</div>
+      </div>
+      <div id="hotspots"></div>
+    </section>
+
+    <aside class="sidebar">
+      <section>
+        <p class="eyebrow" id="theme">First Meeting</p>
+        <h1 class="scene-title" id="sceneTitle">English Class</h1>
+        <p id="sceneIntro">Look for glowing clues, then enter the password to unlock the next memory.</p>
+      </section>
+
+      <section class="clue-log">
+        <h3>Clues Found</h3>
+        <ul id="clueList"></ul>
+      </section>
+
+      <section class="password-box">
+        <p class="eyebrow">Memory Lock</p>
+        <input id="passwordInput" autocomplete="off" placeholder="Enter password">
+        <div class="row">
+          <button id="submitPassword">Unlock</button>
+          <button class="secondary" id="hintButton">Hint</button>
+          <button class="secondary" id="editButton">Edit</button>
+        </div>
+        <div class="feedback" id="feedback"></div>
+      </section>
+    </aside>
+  </main>
+
+  <section class="modal" id="startModal">
+    <div class="panel">
+      <p class="eyebrow">Five floors. Five memories.</p>
+      <h1>cs thingy</h1>
+      <p>Emily enters a mysterious building made of memories. Click the glowing clues in each still scene, solve the memory lock, and climb toward the final question.</p>
+      <div class="row">
+        <button id="startGame">Start</button>
+      </div>
+    </div>
+  </section>
+
+  <section class="modal hidden" id="noteModal">
+    <div class="panel">
+      <p class="eyebrow" id="noteType">Clue</p>
+      <h2 id="noteTitle">Clue</h2>
+      <p id="noteBody"></p>
+      <img class="text-image hidden" id="noteImage" alt="">
+      <div class="row">
+        <button id="closeNote">Close</button>
+      </div>
+    </div>
+  </section>
+
+  <section class="modal hidden" id="endingModal">
+    <div class="panel">
+      <p class="eyebrow">You remembered everything. So did I.</p>
+      <h2>PROM?</h2>
+      <p>Poop Master stands under the rooftop lights. “I’ve been trying to ask you for months. So I built you a reason to find me. Will you go to prom with me?”</p>
+      <div class="row">
+        <button class="ending-choice">YES</button>
+        <button class="secondary ending-choice">ALSO YES</button>
+      </div>
+    </div>
+  </section>
+
+  <section class="modal hidden" id="editorModal">
+    <div class="panel editor-panel">
+      <p class="eyebrow">Edit Game</p>
+      <h2>Texts & Clues</h2>
+      <p class="editor-note">Changes save in this browser. Add clues with an X/Y percentage position, then save.</p>
+      <div class="editor-grid">
+        <div class="field wide">
+          <label for="editSceneSelect">Scene</label>
+          <select id="editSceneSelect"></select>
+        </div>
+        <div class="field">
+          <label for="editTitle">Scene title</label>
+          <input id="editTitle">
+        </div>
+        <div class="field">
+          <label for="editTheme">Theme label</label>
+          <input id="editTheme">
+        </div>
+        <div class="field wide">
+          <label for="editIntro">Intro text</label>
+          <textarea id="editIntro"></textarea>
+        </div>
+        <div class="field">
+          <label for="editAnswer">Password</label>
+          <input id="editAnswer">
+        </div>
+        <div class="field">
+          <label for="editHint">Hint</label>
+          <input id="editHint">
+        </div>
+        <div class="field wide">
+          <label for="editReward">Reward text</label>
+          <textarea id="editReward"></textarea>
+        </div>
+        <div class="field wide">
+          <label>Clues</label>
+          <div id="clueEditorList"></div>
+          <div class="row">
+            <button id="addClueButton" type="button">Add Clue</button>
+          </div>
+        </div>
+      </div>
+      <div class="row">
+        <button id="saveEditorButton">Save Changes</button>
+        <button class="secondary" id="closeEditorButton">Close</button>
+        <button class="secondary" id="resetEditorButton">Reset Defaults</button>
+      </div>
+    </div>
+  </section>
+
+  <script>
+    const letters = ["P", "R", "O", "M", "?"];
+    const STORAGE_KEY = "cs-thingy-scenes-v1";
+    const defaultScenes = [
+      {
+        title: "English Class",
+        theme: "Floor 1 - First Meeting",
+        image: "assets/scenes/school.png",
+        intro: "Poop Master's voice crackles through the speaker: Do you remember the first class we shared?",
+        answer: "0203",
+        hint: "Use the class numbers that surrounded the first English-class memory.",
+        reward: "P is for the place where everything quietly started.",
+        clues: [
+          { x: 31, y: 45, title: "Subject Posters", body: "Computer Science -> Room 02. Accounting -> Room 03. The classes that surrounded us became the code." }
+        ]
+      },
+      {
+        title: "Rainlight Cafe",
+        theme: "Floor 2 - Connection",
+        image: "assets/scenes/cafe.png",
+        intro: "The cafe is warm, rain-soaked, and quiet. A note says: Let’s go back together someday.",
+        answer: "Meet Fresh",
+        hint: "The password is the place you want to return to together.",
+        reward: "R is for remembering. But also for returning.",
+        clues: [
+          { x: 46, y: 57, title: "Table Marker", body: "The little brass sign reads: Meet Fresh. A place to return to, and a place to make new memories." }
+        ]
+      },
+      {
+        title: "Midnight McDonald's",
+        theme: "Floor 3 - Ordinary Moments",
+        image: "assets/scenes/mcdonalds.png",
+        intro: "Bright lights hum over the booths. Ordinary memories somehow feel enormous here.",
+        answer: "0606",
+        hint: "The hidden tray numbers make the code.",
+        reward: "O is for ordinary moments that somehow became unforgettable.",
+        clues: [
+          { x: 68, y: 60, title: "Hidden Tray Numbers", body: "Numbers are taped under two trays: 06 and 06." }
+        ]
+      },
+      {
+        title: "Poop Master's House",
+        theme: "Floor 4 - Comfort",
+        image: "assets/scenes/house.png",
+        intro: "The living room is familiar after only two visits. The sealed envelope waits on the table.",
+        answer: "maybe",
+        hint: "Read the first letters of the poem lines.",
+        reward: "M is for maybe. M is for more than I've said.",
+        clues: [
+          { x: 50, y: 61, title: "Sealed Envelope", body: "Maybe I should not open this yet. Always, the room felt easier with you in it. You made quiet feel safe. Before I knew what to say, you stayed. Even now, I am still nervous." }
+        ]
+      },
+      {
+        title: "Rooftop",
+        theme: "Floor 5 - The Confession",
+        image: "assets/scenes/rooftop.png",
+        intro: "The stairwell opens under the night sky. The letters float toward the podium.",
+        answer: "prom",
+        hint: "The collected letters spell the question.",
+        reward: "The final letter is a question mark.",
+        clues: [
+          { x: 38, y: 45, title: "Floating Letters", body: "P R O M drift into place above the skyline." }
+        ]
+      }
+    ];
+
+    let scenes = loadScenes();
+
+    let sceneIndex = 0;
+    const found = scenes.map(() => new Set());
+    const collectedLetters = ["_", "_", "_", "_", "_"];
+
+    const sceneImage = document.querySelector("#sceneImage");
+    const hotspots = document.querySelector("#hotspots");
+    const floorPill = document.querySelector("#floorPill");
+    const lettersEl = document.querySelector("#letters");
+    const theme = document.querySelector("#theme");
+    const sceneTitle = document.querySelector("#sceneTitle");
+    const sceneIntro = document.querySelector("#sceneIntro");
+    const clueList = document.querySelector("#clueList");
+    const passwordInput = document.querySelector("#passwordInput");
+    const feedback = document.querySelector("#feedback");
+    const startModal = document.querySelector("#startModal");
+    const noteModal = document.querySelector("#noteModal");
+    const endingModal = document.querySelector("#endingModal");
+    const noteImage = document.querySelector("#noteImage");
+    const editorModal = document.querySelector("#editorModal");
+    const editSceneSelect = document.querySelector("#editSceneSelect");
+    const editTitle = document.querySelector("#editTitle");
+    const editTheme = document.querySelector("#editTheme");
+    const editIntro = document.querySelector("#editIntro");
+    const editAnswer = document.querySelector("#editAnswer");
+    const editHint = document.querySelector("#editHint");
+    const editReward = document.querySelector("#editReward");
+    const clueEditorList = document.querySelector("#clueEditorList");
+    let editingSceneIndex = 0;
+
+    document.querySelector("#startGame").addEventListener("click", () => startModal.classList.add("hidden"));
+    document.querySelector("#closeNote").addEventListener("click", () => noteModal.classList.add("hidden"));
+    document.querySelector("#submitPassword").addEventListener("click", submitPassword);
+    document.querySelector("#hintButton").addEventListener("click", showHint);
+    document.querySelector("#editButton").addEventListener("click", openEditor);
+    document.querySelector("#closeEditorButton").addEventListener("click", closeEditor);
+    document.querySelector("#saveEditorButton").addEventListener("click", saveEditor);
+    document.querySelector("#addClueButton").addEventListener("click", addEditorClue);
+    document.querySelector("#resetEditorButton").addEventListener("click", resetEditorDefaults);
+    editSceneSelect.addEventListener("change", () => {
+      applyEditorFormToScene();
+      editingSceneIndex = Number(editSceneSelect.value);
+      renderEditorScene();
+    });
+    document.querySelectorAll(".ending-choice").forEach((button) => {
+      button.addEventListener("click", () => {
+        document.querySelector("#endingModal p:nth-of-type(2)").textContent = "YES. Fireworks bloom over the city. You remembered everything. So did I.";
+        document.querySelectorAll(".ending-choice").forEach((choice) => choice.classList.add("hidden"));
+      });
+    });
+    passwordInput.addEventListener("keydown", (event) => {
+      if (event.key === "Enter") submitPassword();
+    });
+
+    function render() {
+      const scene = scenes[sceneIndex];
+      sceneImage.src = scene.image;
+      sceneImage.alt = scene.title;
+      floorPill.textContent = `Floor ${sceneIndex + 1}/5`;
+      theme.textContent = scene.theme;
+      sceneTitle.textContent = scene.title;
+      sceneIntro.textContent = scene.intro;
+      passwordInput.value = "";
+      passwordInput.placeholder = sceneIndex === 4 ? "Enter final word" : "Enter password";
+      feedback.textContent = "";
+
+      lettersEl.innerHTML = collectedLetters.map((letter) => `<span class="letter ${letter !== "_" ? "filled" : ""}">${letter}</span>`).join("");
+      hotspots.innerHTML = "";
+      scene.clues.forEach((clue, index) => {
+        const button = document.createElement("button");
+        button.className = `hotspot ${found[sceneIndex].has(index) ? "found" : ""}`;
+        button.style.left = `${clue.x}%`;
+        button.style.top = `${clue.y}%`;
+        button.title = clue.title;
+        button.addEventListener("click", () => openClue(index));
+        hotspots.append(button);
+      });
+      renderClues();
+    }
+
+    function renderClues() {
+      const list = [...found[sceneIndex]];
+      clueList.innerHTML = list.length
+        ? list.map((index) => {
+          const clue = scenes[sceneIndex].clues[index];
+          const image = clue.image ? `<img class="text-image" src="${escapeAttr(clue.image)}" alt="${escapeAttr(clue.title)}">` : "";
+          return `<li><strong>${escapeHtml(clue.title)}</strong><br>${escapeHtml(clue.body)}${image}</li>`;
+        }).join("")
+        : "<li>No clues found yet. Click the glowing points in the scene.</li>";
+    }
+
+    function openClue(index) {
+      found[sceneIndex].add(index);
+      const clue = scenes[sceneIndex].clues[index];
+      document.querySelector("#noteType").textContent = "Clue Found";
+      document.querySelector("#noteTitle").textContent = clue.title;
+      document.querySelector("#noteBody").textContent = clue.body;
+      showNoteImage(clue.image, clue.title);
+      noteModal.classList.remove("hidden");
+      render();
+    }
+
+    function submitPassword() {
+      const scene = scenes[sceneIndex];
+      const answer = clean(passwordInput.value);
+      if (answer !== clean(scene.answer)) {
+        feedback.textContent = "That lock stays closed. Check your clues.";
+        return;
+      }
+      collectedLetters[sceneIndex] = letters[sceneIndex];
+      if (sceneIndex === scenes.length - 1) {
+        render();
+        endingModal.classList.remove("hidden");
+        return;
+      }
+      showReward(scene.reward);
+      sceneIndex += 1;
+      setTimeout(render, 650);
+    }
+
+    function showHint() {
+      feedback.textContent = scenes[sceneIndex].hint;
+    }
+
+    function showReward(message) {
+      document.querySelector("#noteType").textContent = `Letter ${letters[sceneIndex]} Collected`;
+      document.querySelector("#noteTitle").textContent = letters[sceneIndex];
+      document.querySelector("#noteBody").textContent = message;
+      showNoteImage("", "");
+      noteModal.classList.remove("hidden");
+    }
+
+    function showNoteImage(src, alt) {
+      if (src) {
+        noteImage.src = src;
+        noteImage.alt = alt || "Clue image";
+        noteImage.classList.remove("hidden");
+      } else {
+        noteImage.removeAttribute("src");
+        noteImage.alt = "";
+        noteImage.classList.add("hidden");
+      }
+    }
+
+    function openEditor() {
+      editingSceneIndex = sceneIndex;
+      editSceneSelect.innerHTML = scenes.map((scene, index) => `<option value="${index}">${index + 1}. ${escapeHtml(scene.title)}</option>`).join("");
+      editSceneSelect.value = String(editingSceneIndex);
+      renderEditorScene();
+      editorModal.classList.remove("hidden");
+    }
+
+    function closeEditor() {
+      editorModal.classList.add("hidden");
+    }
+
+    function renderEditorScene() {
+      const scene = scenes[editingSceneIndex];
+      editTitle.value = scene.title;
+      editTheme.value = scene.theme;
+      editIntro.value = scene.intro;
+      editAnswer.value = scene.answer;
+      editHint.value = scene.hint;
+      editReward.value = scene.reward;
+      clueEditorList.innerHTML = scene.clues.map((clue, index) => `
+        <div class="clue-editor" data-clue-index="${index}">
+          <div class="field">
+            <label>X %</label>
+            <input data-clue-field="x" type="number" min="0" max="100" step="1" value="${Number(clue.x) || 50}">
+          </div>
+          <div class="field">
+            <label>Y %</label>
+            <input data-clue-field="y" type="number" min="0" max="100" step="1" value="${Number(clue.y) || 50}">
+          </div>
+          <div class="field">
+            <label>Clue title</label>
+            <input data-clue-field="title" value="${escapeAttr(clue.title)}">
+          </div>
+          <button class="secondary delete-clue" type="button" data-delete-clue="${index}">Delete</button>
+          <textarea data-clue-field="body" aria-label="Clue body">${escapeHtml(clue.body)}</textarea>
+          <div class="clue-image-fields">
+            <div class="field">
+              <label>Image URL</label>
+              <input data-clue-field="image" value="${escapeAttr(clue.image || "")}" placeholder="https://... or uploaded image">
+            </div>
+            <div class="field">
+              <label>Upload image</label>
+              <input data-image-upload="${index}" type="file" accept="image/*">
+            </div>
+          </div>
+          ${clue.image ? `<img class="image-preview" src="${escapeAttr(clue.image)}" alt="Clue image preview">` : ""}
+        </div>
+      `).join("");
+      clueEditorList.querySelectorAll(".delete-clue").forEach((button) => {
+        button.addEventListener("click", () => {
+          applyEditorFormToScene();
+          scenes[editingSceneIndex].clues.splice(Number(button.dataset.deleteClue), 1);
+          renderEditorScene();
+        });
+      });
+      clueEditorList.querySelectorAll("[data-image-upload]").forEach((input) => {
+        input.addEventListener("change", async () => {
+          if (!input.files || !input.files[0]) return;
+          const index = Number(input.dataset.imageUpload);
+          const dataUrl = await imageFileToDataUrl(input.files[0]);
+          applyEditorFormToScene();
+          scenes[editingSceneIndex].clues[index].image = dataUrl;
+          renderEditorScene();
+        });
+      });
+    }
+
+    function applyEditorFormToScene() {
+      const scene = scenes[editingSceneIndex];
+      scene.title = editTitle.value.trim() || "Untitled Scene";
+      scene.theme = editTheme.value.trim() || `Floor ${editingSceneIndex + 1}`;
+      scene.intro = editIntro.value.trim();
+      scene.answer = editAnswer.value.trim();
+      scene.hint = editHint.value.trim();
+      scene.reward = editReward.value.trim();
+      scene.clues = [...clueEditorList.querySelectorAll(".clue-editor")].map((row) => ({
+        x: clampNumber(row.querySelector('[data-clue-field="x"]').value, 0, 100, 50),
+        y: clampNumber(row.querySelector('[data-clue-field="y"]').value, 0, 100, 50),
+        title: row.querySelector('[data-clue-field="title"]').value.trim() || "New Clue",
+        body: row.querySelector('[data-clue-field="body"]').value.trim() || "Write your clue text here.",
+        image: row.querySelector('[data-clue-field="image"]').value.trim()
+      }));
+    }
+
+    function saveEditor() {
+      applyEditorFormToScene();
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(scenes));
+      editorModal.classList.add("hidden");
+      editSceneSelect.innerHTML = "";
+      render();
+      feedback.textContent = "Saved your edits.";
+    }
+
+    function addEditorClue() {
+      applyEditorFormToScene();
+      scenes[editingSceneIndex].clues.push({
+        x: 50,
+        y: 50,
+        title: "New Clue",
+        body: "Write your clue text here.",
+        image: ""
+      });
+      renderEditorScene();
+    }
+
+    function imageFileToDataUrl(file) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onerror = () => reject(reader.error);
+        reader.onload = () => {
+          const image = new Image();
+          image.onerror = () => resolve(reader.result);
+          image.onload = () => {
+            const maxWidth = 900;
+            const scale = Math.min(1, maxWidth / image.width);
+            const canvas = document.createElement("canvas");
+            canvas.width = Math.max(1, Math.round(image.width * scale));
+            canvas.height = Math.max(1, Math.round(image.height * scale));
+            const ctx = canvas.getContext("2d");
+            ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
+            resolve(canvas.toDataURL("image/jpeg", 0.82));
+          };
+          image.src = reader.result;
+        };
+        reader.readAsDataURL(file);
+      });
+    }
+
+    function resetEditorDefaults() {
+      if (!confirm("Reset all edited text and clues back to the defaults?")) return;
+      scenes = cloneDefaultScenes();
+      localStorage.removeItem(STORAGE_KEY);
+      found.forEach((set) => set.clear());
+      collectedLetters.fill("_");
+      sceneIndex = 0;
+      editingSceneIndex = 0;
+      editorModal.classList.add("hidden");
+      render();
+    }
+
+    function loadScenes() {
+      try {
+        const saved = JSON.parse(localStorage.getItem(STORAGE_KEY));
+        if (Array.isArray(saved) && saved.length === defaultScenes.length) return saved;
+      } catch (error) {}
+      return cloneDefaultScenes();
+    }
+
+    function cloneDefaultScenes() {
+      return JSON.parse(JSON.stringify(defaultScenes));
+    }
+
+    function clampNumber(value, min, max, fallback) {
+      const number = Number(value);
+      if (!Number.isFinite(number)) return fallback;
+      return Math.min(max, Math.max(min, number));
+    }
+
+    function escapeHtml(value) {
+      return String(value ?? "")
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+    }
+
+    function escapeAttr(value) {
+      return escapeHtml(value).replaceAll("\n", " ");
+    }
+
+    function clean(value) {
+      return value.toLowerCase().replace(/[^a-z0-9]/g, "");
+    }
+
+    render();
+  </script>
+</body>
+</html>
