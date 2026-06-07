@@ -371,6 +371,20 @@
       font-size: 0.88rem;
     }
 
+    .content-editor {
+      width: min(980px, 100%);
+      max-height: calc(100vh - 36px);
+      overflow: auto;
+    }
+
+    .content-editor textarea {
+      min-height: min(58vh, 620px);
+      font-family: Consolas, "Courier New", monospace;
+      font-size: 0.88rem;
+      white-space: pre;
+      overflow: auto;
+    }
+
     @media (max-width: 900px) {
       .app {
         grid-template-columns: 1fr;
@@ -395,6 +409,7 @@
       <div class="topbar">
         <div class="pill">cs thingy</div>
         <div class="pill progress" id="progress"></div>
+        <button class="secondary" id="contentEditButton">Edit Content</button>
       </div>
 
       <section class="photo-grid">
@@ -440,8 +455,24 @@
     </div>
   </section>
 
+  <section class="modal hidden" id="contentEditorModal">
+    <div class="panel content-editor">
+      <p class="eyebrow">Edit Mode</p>
+      <h2>Game Content</h2>
+      <p>Edit the JSON below to change text, passwords, cards, image paths, or branch content. Save stores changes in this browser.</p>
+      <textarea id="contentEditorText" spellcheck="false"></textarea>
+      <div class="row">
+        <button id="saveContentButton">Save Changes</button>
+        <button class="secondary" id="closeContentEditorButton">Close</button>
+        <button class="secondary" id="resetContentButton">Reset Defaults</button>
+      </div>
+      <div class="feedback" id="contentEditorFeedback"></div>
+    </div>
+  </section>
+
   <script>
-    const STORAGE = "cs-thingy-anniversary-notes-v1";
+    const NOTES_STORAGE = "cs-thingy-anniversary-notes-v1";
+    const CONTENT_STORAGE = "cs-thingy-anniversary-content-v1";
     const segmentOrder = ["tonight", "finch", "bbq", "wayback"];
     const branchOrder = { love: "waybackLove", loved: "waybackLoved" };
     const state = {
@@ -451,7 +482,7 @@
       branch: null
     };
 
-    const segments = {
+    const defaultSegments = {
       tonight: {
         index: 1,
         title: "今晚",
@@ -555,6 +586,7 @@
       }
     };
 
+    let segments = loadSegments();
     const savedNotes = loadSavedNotes();
     const wall = document.querySelector("#wall");
     const sceneImage = document.querySelector("#sceneImage");
@@ -570,8 +602,15 @@
     const passInput = document.querySelector("#passInput");
     const feedback = document.querySelector("#feedback");
     const startModal = document.querySelector("#startModal");
+    const contentEditorModal = document.querySelector("#contentEditorModal");
+    const contentEditorText = document.querySelector("#contentEditorText");
+    const contentEditorFeedback = document.querySelector("#contentEditorFeedback");
 
     document.querySelector("#startButton").addEventListener("click", () => startModal.classList.add("hidden"));
+    document.querySelector("#contentEditButton").addEventListener("click", openContentEditor);
+    document.querySelector("#closeContentEditorButton").addEventListener("click", () => contentEditorModal.classList.add("hidden"));
+    document.querySelector("#saveContentButton").addEventListener("click", saveContentEditor);
+    document.querySelector("#resetContentButton").addEventListener("click", resetContentDefaults);
     document.querySelector("#unlockButton").addEventListener("click", unlock);
     document.querySelector("#hintButton").addEventListener("click", () => feedback.textContent = currentSegment().hint || "No hint for this one.");
     passInput.addEventListener("keydown", (event) => {
@@ -710,6 +749,36 @@
       return segments[state.current];
     }
 
+    function openContentEditor() {
+      contentEditorText.value = JSON.stringify(segments, null, 2);
+      contentEditorFeedback.textContent = "";
+      contentEditorModal.classList.remove("hidden");
+    }
+
+    function saveContentEditor() {
+      try {
+        const parsed = JSON.parse(contentEditorText.value);
+        validateSegments(parsed);
+        segments = parsed;
+        localStorage.setItem(CONTENT_STORAGE, JSON.stringify(segments));
+        if (!segments[state.current]) state.current = Object.keys(segments)[0];
+        contentEditorModal.classList.add("hidden");
+        render();
+      } catch (error) {
+        contentEditorFeedback.textContent = `Could not save: ${error.message}`;
+      }
+    }
+
+    function resetContentDefaults() {
+      if (!confirm("Reset all game content edits back to defaults?")) return;
+      segments = cloneDefaultSegments();
+      localStorage.removeItem(CONTENT_STORAGE);
+      state.current = "tonight";
+      state.branch = null;
+      contentEditorModal.classList.add("hidden");
+      render();
+    }
+
     function normalize(value) {
       return String(value || "")
         .trim()
@@ -719,14 +788,39 @@
 
     function loadSavedNotes() {
       try {
-        return JSON.parse(localStorage.getItem(STORAGE)) || {};
+        return JSON.parse(localStorage.getItem(NOTES_STORAGE)) || {};
       } catch {
         return {};
       }
     }
 
     function saveNotes() {
-      localStorage.setItem(STORAGE, JSON.stringify(savedNotes));
+      localStorage.setItem(NOTES_STORAGE, JSON.stringify(savedNotes));
+    }
+
+    function loadSegments() {
+      try {
+        const saved = JSON.parse(localStorage.getItem(CONTENT_STORAGE));
+        validateSegments(saved);
+        return saved;
+      } catch {
+        return cloneDefaultSegments();
+      }
+    }
+
+    function cloneDefaultSegments() {
+      return JSON.parse(JSON.stringify(defaultSegments));
+    }
+
+    function validateSegments(value) {
+      if (!value || typeof value !== "object" || Array.isArray(value)) throw new Error("Top level must be an object.");
+      if (!value.tonight) throw new Error("A 'tonight' segment is required.");
+      Object.entries(value).forEach(([key, segment]) => {
+        if (!segment || typeof segment !== "object") throw new Error(`${key} must be an object.`);
+        if (!segment.title) throw new Error(`${key} needs a title.`);
+        if (!segment.image) throw new Error(`${key} needs an image path.`);
+        if (!Array.isArray(segment.cards)) throw new Error(`${key} needs a cards array.`);
+      });
     }
 
     function escapeHtml(value) {
