@@ -6,13 +6,15 @@
   <title>cs thingy</title>
   <style>
     :root {
-      --ink: #fff7ed;
-      --muted: rgba(255, 247, 237, 0.72);
-      --panel: rgba(11, 14, 22, 0.78);
-      --line: rgba(255, 255, 255, 0.18);
+      --ink: #fffaf2;
+      --muted: rgba(255, 250, 242, 0.74);
+      --panel: rgba(15, 18, 25, 0.82);
+      --panel-strong: rgba(15, 18, 25, 0.95);
+      --line: rgba(255, 255, 255, 0.2);
       --gold: #ffd36e;
-      --rose: #f28aa2;
-      --mint: #80d6bb;
+      --rose: #ff8faa;
+      --mint: #83ddc2;
+      --blue: #9fd2ff;
       --bad: #ff9a8a;
     }
 
@@ -24,177 +26,252 @@
       height: 100%;
       margin: 0;
       overflow: hidden;
-      background: #090c12;
+      background: #0b0e14;
       color: var(--ink);
       font-family: "Segoe UI", system-ui, sans-serif;
     }
 
     button,
     input,
-    select,
     textarea {
       font: inherit;
     }
 
     button {
+      min-height: 42px;
       border: 1px solid rgba(255, 255, 255, 0.2);
       border-radius: 8px;
-      min-height: 42px;
       padding: 0 14px;
+      color: #18120a;
       background: var(--gold);
-      color: #15120a;
-      font-weight: 800;
+      font-weight: 850;
       cursor: pointer;
     }
 
     button.secondary {
-      background: rgba(255, 255, 255, 0.1);
       color: var(--ink);
+      background: rgba(255, 255, 255, 0.1);
+    }
+
+    button.ghost {
+      color: var(--muted);
+      background: transparent;
     }
 
     input,
-    select,
     textarea {
       width: 100%;
       border: 1px solid rgba(255, 255, 255, 0.22);
       border-radius: 8px;
-      padding: 0 12px;
-      background: rgba(0, 0, 0, 0.38);
+      background: rgba(0, 0, 0, 0.34);
       color: var(--ink);
       outline: none;
     }
 
-    input,
-    select {
-      height: 44px;
+    input {
+      height: 46px;
+      padding: 0 12px;
     }
 
     textarea {
-      min-height: 92px;
-      padding: 10px 12px;
+      min-height: 180px;
+      padding: 12px;
       resize: vertical;
-      line-height: 1.35;
+      line-height: 1.5;
     }
 
     .app {
       position: fixed;
       inset: 0;
       display: grid;
-      grid-template-columns: minmax(0, 1fr) 360px;
+      grid-template-columns: minmax(0, 1fr) 390px;
       background:
-        radial-gradient(circle at 12% 18%, rgba(255, 211, 110, 0.14), transparent 32%),
-        radial-gradient(circle at 88% 14%, rgba(128, 214, 187, 0.12), transparent 34%),
-        #090c12;
+        radial-gradient(circle at 12% 10%, rgba(255, 211, 110, 0.18), transparent 30%),
+        radial-gradient(circle at 85% 16%, rgba(131, 221, 194, 0.14), transparent 34%),
+        #0b0e14;
     }
 
-    .stage {
+    .wall {
       position: relative;
-      min-width: 0;
       overflow: hidden;
-      background: #111723;
+      min-width: 0;
+      padding: clamp(16px, 3vw, 30px);
+      display: grid;
+      grid-template-rows: auto 1fr auto;
+      gap: 14px;
     }
 
-    .scene-image {
+    .wall::before {
+      content: "";
       position: absolute;
       inset: 0;
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      filter: saturate(1.08) contrast(1.04);
-      transform: scale(1.03);
+      background-image: var(--bg);
+      background-size: cover;
+      background-position: center;
+      filter: blur(18px) brightness(0.62) saturate(1.08);
+      transform: scale(1.08);
+      opacity: 0.72;
     }
 
-    .vignette {
+    .wall::after {
+      content: "";
       position: absolute;
       inset: 0;
       background:
-        linear-gradient(90deg, rgba(5, 7, 12, 0.16), transparent 25%, rgba(5, 7, 12, 0.4)),
-        radial-gradient(circle at center, transparent 42%, rgba(0, 0, 0, 0.55));
+        linear-gradient(90deg, rgba(5, 7, 12, 0.28), transparent 46%, rgba(5, 7, 12, 0.44)),
+        radial-gradient(circle at center, transparent 35%, rgba(0, 0, 0, 0.48));
       pointer-events: none;
     }
 
-    .hotspot {
-      position: absolute;
-      width: 42px;
-      height: 42px;
-      border-radius: 999px;
-      border: 2px solid rgba(255, 255, 255, 0.75);
-      background:
-        radial-gradient(circle, rgba(255, 255, 255, 0.95), rgba(255, 211, 110, 0.78) 34%, rgba(255, 211, 110, 0.14) 68%, transparent 69%);
-      box-shadow: 0 0 24px rgba(255, 211, 110, 0.86);
-      transform: translate(-50%, -50%);
-      animation: pulse 1.5s ease-in-out infinite;
-    }
-
-    .hotspot.found {
-      background: rgba(128, 214, 187, 0.24);
-      border-color: rgba(128, 214, 187, 0.8);
-      box-shadow: 0 0 20px rgba(128, 214, 187, 0.55);
-      animation: none;
-    }
-
-    @keyframes pulse {
-      0%, 100% { transform: translate(-50%, -50%) scale(0.92); }
-      50% { transform: translate(-50%, -50%) scale(1.08); }
+    .topbar,
+    .photo-grid,
+    .minigame {
+      position: relative;
+      z-index: 1;
     }
 
     .topbar {
-      position: absolute;
-      left: 16px;
-      top: 16px;
       display: flex;
+      flex-wrap: wrap;
       gap: 10px;
       align-items: center;
-      z-index: 3;
+      justify-content: space-between;
     }
 
     .pill {
       border: 1px solid var(--line);
       border-radius: 8px;
       padding: 9px 11px;
-      background: rgba(11, 14, 22, 0.68);
+      background: rgba(15, 18, 25, 0.72);
       backdrop-filter: blur(12px);
-      box-shadow: 0 12px 32px rgba(0, 0, 0, 0.28);
+      box-shadow: 0 14px 34px rgba(0, 0, 0, 0.26);
     }
 
-    .letters {
+    .progress {
       display: flex;
-      gap: 6px;
-      font-weight: 950;
+      gap: 7px;
+      align-items: center;
     }
 
-    .letter {
-      display: grid;
-      width: 32px;
-      height: 32px;
-      place-items: center;
-      border: 1px solid rgba(255, 255, 255, 0.24);
-      border-radius: 6px;
-      color: rgba(255, 255, 255, 0.42);
-      background: rgba(255, 255, 255, 0.08);
+    .dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.22);
+      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.16);
     }
 
-    .letter.filled {
-      color: #18120a;
+    .dot.active {
       background: var(--gold);
-      box-shadow: 0 0 20px rgba(255, 211, 110, 0.72);
+      box-shadow: 0 0 18px rgba(255, 211, 110, 0.8);
     }
 
-    .sidebar {
+    .photo-grid {
       display: grid;
-      grid-template-rows: auto 1fr auto;
+      grid-template-columns: 1.1fr 0.9fr;
       gap: 14px;
-      padding: 16px;
-      border-left: 1px solid var(--line);
-      background: rgba(9, 12, 18, 0.9);
-      overflow: hidden;
+      min-height: 0;
+      align-items: stretch;
     }
 
-    .scene-title {
-      margin: 0;
-      font-size: clamp(1.7rem, 4vw, 2.4rem);
-      line-height: 1;
-      letter-spacing: 0;
+    .photo-card,
+    .memory-card {
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.08);
+      box-shadow: 0 24px 60px rgba(0, 0, 0, 0.34);
+      overflow: hidden;
+      backdrop-filter: blur(10px);
+    }
+
+    .photo-card {
+      position: relative;
+      min-height: 390px;
+    }
+
+    .photo-card img {
+      width: 100%;
+      height: 100%;
+      min-height: 390px;
+      object-fit: cover;
+      display: block;
+    }
+
+    .caption {
+      position: absolute;
+      left: 14px;
+      right: 14px;
+      bottom: 14px;
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      border-radius: 8px;
+      padding: 12px 14px;
+      background: rgba(8, 10, 15, 0.72);
+      color: var(--muted);
+      backdrop-filter: blur(12px);
+      line-height: 1.42;
+    }
+
+    .memory-stack {
+      display: grid;
+      gap: 12px;
+      min-height: 0;
+    }
+
+    .memory-card {
+      padding: 14px;
+      color: var(--muted);
+      line-height: 1.42;
+    }
+
+    .memory-card strong {
+      display: block;
+      margin-bottom: 5px;
+      color: var(--ink);
+    }
+
+    .memory-card.clickable {
+      cursor: pointer;
+      transition: transform 160ms ease, border-color 160ms ease, background 160ms ease;
+    }
+
+    .memory-card.clickable:hover,
+    .memory-card.selected {
+      transform: translateY(-2px);
+      border-color: rgba(255, 211, 110, 0.72);
+      background: rgba(255, 211, 110, 0.12);
+    }
+
+    .minigame {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 12px;
+      background: rgba(15, 18, 25, 0.74);
+      backdrop-filter: blur(12px);
+    }
+
+    .minigame-title {
+      margin: 0 0 8px;
+      color: var(--mint);
+      font-size: 0.76rem;
+      font-weight: 900;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+
+    .choice-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .side {
+      display: grid;
+      grid-template-rows: auto auto minmax(0, 1fr) auto;
+      gap: 14px;
+      padding: 18px;
+      border-left: 1px solid var(--line);
+      background: rgba(9, 12, 18, 0.92);
+      overflow: hidden;
     }
 
     .eyebrow {
@@ -206,57 +283,42 @@
       text-transform: uppercase;
     }
 
-    p {
-      color: var(--muted);
-      line-height: 1.48;
+    h1,
+    h2 {
+      margin: 0;
+      line-height: 1;
+      letter-spacing: 0;
     }
 
-    .clue-log {
+    h1 {
+      font-size: clamp(2rem, 6vw, 4rem);
+    }
+
+    h2 {
+      font-size: clamp(1.8rem, 5vw, 3.2rem);
+    }
+
+    p {
+      color: var(--muted);
+      line-height: 1.5;
+    }
+
+    .letter-panel {
       min-height: 0;
       overflow: auto;
       border: 1px solid var(--line);
       border-radius: 8px;
-      padding: 12px;
+      padding: 14px;
       background: rgba(255, 255, 255, 0.06);
+      white-space: pre-wrap;
+      line-height: 1.55;
+      color: rgba(255, 250, 242, 0.86);
     }
 
-    .clue-log h3 {
-      margin: 0 0 8px;
-      font-size: 1rem;
-    }
-
-    .clue-log ul {
-      display: grid;
-      gap: 8px;
-      margin: 0;
-      padding: 0;
-      list-style: none;
-    }
-
-    .clue-log li {
-      border-left: 3px solid rgba(255, 211, 110, 0.72);
-      padding: 8px 10px;
-      background: rgba(0, 0, 0, 0.18);
-      color: var(--muted);
-      font-size: 0.92rem;
-      line-height: 1.35;
-    }
-
-    .text-image {
-      display: block;
-      width: 100%;
-      max-height: 220px;
-      margin-top: 10px;
+    .lock {
       border: 1px solid var(--line);
       border-radius: 8px;
-      object-fit: cover;
-      background: rgba(255, 255, 255, 0.08);
-    }
-
-    .password-box {
-      border: 1px solid var(--line);
-      border-radius: 8px;
-      padding: 12px;
+      padding: 14px;
       background: rgba(255, 255, 255, 0.06);
     }
 
@@ -269,21 +331,20 @@
 
     .feedback {
       min-height: 22px;
-      margin-top: 9px;
+      margin-top: 10px;
       color: var(--bad);
       font-weight: 750;
-      font-size: 0.92rem;
     }
 
     .modal {
       position: fixed;
       inset: 0;
+      z-index: 10;
       display: grid;
       place-items: center;
       padding: 18px;
       background: rgba(3, 5, 10, 0.62);
       backdrop-filter: blur(12px);
-      z-index: 8;
     }
 
     .modal.hidden,
@@ -292,144 +353,76 @@
     }
 
     .panel {
-      width: min(620px, 100%);
+      width: min(720px, 100%);
       border: 1px solid rgba(255, 255, 255, 0.22);
       border-radius: 8px;
-      padding: clamp(20px, 5vw, 38px);
-      background: rgba(11, 14, 22, 0.94);
-      box-shadow: 0 28px 90px rgba(0, 0, 0, 0.46);
-    }
-
-    .panel h1,
-    .panel h2 {
-      margin: 0;
-      line-height: 1;
-      letter-spacing: 0;
+      padding: clamp(22px, 5vw, 42px);
+      background: var(--panel-strong);
+      box-shadow: 0 30px 90px rgba(0, 0, 0, 0.48);
     }
 
     .panel h1 {
-      font-size: clamp(3.6rem, 14vw, 7.2rem);
+      font-size: clamp(3rem, 13vw, 7rem);
     }
 
-    .panel h2 {
-      font-size: clamp(2.2rem, 10vw, 5.8rem);
-    }
-
-    .editor-panel {
-      width: min(980px, 100%);
-      max-height: calc(100vh - 36px);
-      overflow: auto;
-    }
-
-    .editor-grid {
-      display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 12px;
-      margin-top: 16px;
-    }
-
-    .field {
-      display: grid;
-      gap: 6px;
-    }
-
-    .field.wide {
-      grid-column: 1 / -1;
-    }
-
-    .field label {
+    .editable-note {
+      margin-top: 8px;
       color: var(--muted);
-      font-size: 0.84rem;
-      font-weight: 750;
+      font-size: 0.88rem;
     }
 
-    .clue-editor {
-      display: grid;
-      grid-template-columns: 80px 80px minmax(0, 1fr) auto;
-      gap: 8px;
-      align-items: end;
-      border: 1px solid var(--line);
-      border-radius: 8px;
-      padding: 10px;
-      background: rgba(255, 255, 255, 0.05);
-    }
-
-    .clue-editor textarea {
-      grid-column: 1 / -1;
-      min-height: 78px;
-    }
-
-    .clue-image-fields {
-      grid-column: 1 / -1;
-      display: grid;
-      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-      gap: 8px;
-    }
-
-    .image-preview {
-      grid-column: 1 / -1;
-      max-width: 220px;
-      max-height: 120px;
-      border: 1px solid var(--line);
-      border-radius: 8px;
-      object-fit: cover;
-    }
-
-    .editor-note {
-      margin-bottom: 0;
-      font-size: 0.9rem;
-    }
-
-    @media (max-width: 860px) {
+    @media (max-width: 900px) {
       .app {
         grid-template-columns: 1fr;
-        grid-template-rows: minmax(0, 1fr) 310px;
+        grid-template-rows: minmax(0, 1fr) 360px;
       }
 
-      .sidebar {
+      .side {
         border-left: 0;
         border-top: 1px solid var(--line);
       }
 
-      .editor-grid,
-      .clue-editor,
-      .clue-image-fields {
+      .photo-grid {
         grid-template-columns: 1fr;
+        overflow: auto;
       }
     }
   </style>
 </head>
 <body>
   <main class="app">
-    <section class="stage" aria-label="Current memory scene">
-      <img class="scene-image" id="sceneImage" alt="">
-      <div class="vignette"></div>
+    <section class="wall" id="wall">
       <div class="topbar">
-        <div class="pill letters" id="letters"></div>
-        <div class="pill" id="floorPill">Floor 1/5</div>
+        <div class="pill">cs thingy</div>
+        <div class="pill progress" id="progress"></div>
       </div>
-      <div id="hotspots"></div>
+
+      <section class="photo-grid">
+        <article class="photo-card">
+          <img id="sceneImage" alt="">
+          <div class="caption" id="caption"></div>
+        </article>
+        <div class="memory-stack" id="memoryStack"></div>
+      </section>
+
+      <section class="minigame" id="minigame"></section>
     </section>
 
-    <aside class="sidebar">
+    <aside class="side">
       <section>
-        <p class="eyebrow" id="theme">First Meeting</p>
-        <h1 class="scene-title" id="sceneTitle">English Class</h1>
-        <p id="sceneIntro">Look for glowing clues, then enter the password to unlock the next memory.</p>
+        <p class="eyebrow" id="segmentLabel">Segment</p>
+        <h1 id="segmentTitle">今晚</h1>
+        <p id="segmentIntro"></p>
       </section>
 
-      <section class="clue-log">
-        <h3>Clues Found</h3>
-        <ul id="clueList"></ul>
-      </section>
+      <section class="letter-panel" id="letterPanel"></section>
 
-      <section class="password-box">
-        <p class="eyebrow">Memory Lock</p>
-        <input id="passwordInput" autocomplete="off" placeholder="Enter password">
+      <section class="lock" id="lockPanel">
+        <p class="eyebrow">Passcode</p>
+        <input id="passInput" autocomplete="off" placeholder="Enter the password you received">
         <div class="row">
-          <button id="submitPassword">Unlock</button>
+          <button id="unlockButton">Unlock Next</button>
           <button class="secondary" id="hintButton">Hint</button>
-          <button class="secondary" id="editButton">Edit</button>
         </div>
         <div class="feedback" id="feedback"></div>
       </section>
@@ -438,457 +431,302 @@
 
   <section class="modal" id="startModal">
     <div class="panel">
-      <p class="eyebrow">Five floors. Five memories.</p>
+      <p class="eyebrow">one year anniversary</p>
       <h1>cs thingy</h1>
-      <p>Emily enters a mysterious building made of memories. Click the glowing clues in each still scene, solve the memory lock, and climb toward the final question.</p>
+      <p>Hi poopoo, I bet this is a surprise 嘿嘿. 这里有一些充满着我们回忆的小游戏，祝你玩得开心~</p>
       <div class="row">
-        <button id="startGame">Start</button>
-      </div>
-    </div>
-  </section>
-
-  <section class="modal hidden" id="noteModal">
-    <div class="panel">
-      <p class="eyebrow" id="noteType">Clue</p>
-      <h2 id="noteTitle">Clue</h2>
-      <p id="noteBody"></p>
-      <img class="text-image hidden" id="noteImage" alt="">
-      <div class="row">
-        <button id="closeNote">Close</button>
-      </div>
-    </div>
-  </section>
-
-  <section class="modal hidden" id="endingModal">
-    <div class="panel">
-      <p class="eyebrow">You remembered everything. So did I.</p>
-      <h2>PROM?</h2>
-      <p>Poop Master stands under the rooftop lights. “I’ve been trying to ask you for months. So I built you a reason to find me. Will you go to prom with me?”</p>
-      <div class="row">
-        <button class="ending-choice">YES</button>
-        <button class="secondary ending-choice">ALSO YES</button>
-      </div>
-    </div>
-  </section>
-
-  <section class="modal hidden" id="editorModal">
-    <div class="panel editor-panel">
-      <p class="eyebrow">Edit Game</p>
-      <h2>Texts & Clues</h2>
-      <p class="editor-note">Changes save in this browser. Add clues with an X/Y percentage position, then save.</p>
-      <div class="editor-grid">
-        <div class="field wide">
-          <label for="editSceneSelect">Scene</label>
-          <select id="editSceneSelect"></select>
-        </div>
-        <div class="field">
-          <label for="editTitle">Scene title</label>
-          <input id="editTitle">
-        </div>
-        <div class="field">
-          <label for="editTheme">Theme label</label>
-          <input id="editTheme">
-        </div>
-        <div class="field wide">
-          <label for="editIntro">Intro text</label>
-          <textarea id="editIntro"></textarea>
-        </div>
-        <div class="field">
-          <label for="editAnswer">Password</label>
-          <input id="editAnswer">
-        </div>
-        <div class="field">
-          <label for="editHint">Hint</label>
-          <input id="editHint">
-        </div>
-        <div class="field wide">
-          <label for="editReward">Reward text</label>
-          <textarea id="editReward"></textarea>
-        </div>
-        <div class="field wide">
-          <label>Clues</label>
-          <div id="clueEditorList"></div>
-          <div class="row">
-            <button id="addClueButton" type="button">Add Clue</button>
-          </div>
-        </div>
-      </div>
-      <div class="row">
-        <button id="saveEditorButton">Save Changes</button>
-        <button class="secondary" id="closeEditorButton">Close</button>
-        <button class="secondary" id="resetEditorButton">Reset Defaults</button>
+        <button id="startButton">Start</button>
       </div>
     </div>
   </section>
 
   <script>
-    const letters = ["P", "R", "O", "M", "?"];
-    const STORAGE_KEY = "cs-thingy-scenes-v1";
-    const defaultScenes = [
-      {
-        title: "English Class",
-        theme: "Floor 1 - First Meeting",
-        image: "assets/scenes/school.png",
-        intro: "Poop Master's voice crackles through the speaker: Do you remember the first class we shared?",
-        answer: "0203",
-        hint: "Use the class numbers that surrounded the first English-class memory.",
-        reward: "P is for the place where everything quietly started.",
-        clues: [
-          { x: 31, y: 45, title: "Subject Posters", body: "Computer Science -> Room 02. Accounting -> Room 03. The classes that surrounded us became the code." }
-        ]
-      },
-      {
-        title: "Rainlight Cafe",
-        theme: "Floor 2 - Connection",
-        image: "assets/scenes/cafe.png",
-        intro: "The cafe is warm, rain-soaked, and quiet. A note says: Let’s go back together someday.",
-        answer: "Meet Fresh",
-        hint: "The password is the place you want to return to together.",
-        reward: "R is for remembering. But also for returning.",
-        clues: [
-          { x: 46, y: 57, title: "Table Marker", body: "The little brass sign reads: Meet Fresh. A place to return to, and a place to make new memories." }
-        ]
-      },
-      {
-        title: "Midnight McDonald's",
-        theme: "Floor 3 - Ordinary Moments",
-        image: "assets/scenes/mcdonalds.png",
-        intro: "Bright lights hum over the booths. Ordinary memories somehow feel enormous here.",
-        answer: "0606",
-        hint: "The hidden tray numbers make the code.",
-        reward: "O is for ordinary moments that somehow became unforgettable.",
-        clues: [
-          { x: 68, y: 60, title: "Hidden Tray Numbers", body: "Numbers are taped under two trays: 06 and 06." }
-        ]
-      },
-      {
-        title: "Poop Master's House",
-        theme: "Floor 4 - Comfort",
-        image: "assets/scenes/house.png",
-        intro: "The living room is familiar after only two visits. The sealed envelope waits on the table.",
-        answer: "maybe",
-        hint: "Read the first letters of the poem lines.",
-        reward: "M is for maybe. M is for more than I've said.",
-        clues: [
-          { x: 50, y: 61, title: "Sealed Envelope", body: "Maybe I should not open this yet. Always, the room felt easier with you in it. You made quiet feel safe. Before I knew what to say, you stayed. Even now, I am still nervous." }
-        ]
-      },
-      {
-        title: "Rooftop",
-        theme: "Floor 5 - The Confession",
+    const STORAGE = "cs-thingy-anniversary-notes-v1";
+    const segmentOrder = ["tonight", "finch", "bbq", "wayback"];
+    const branchOrder = { love: "waybackLove", loved: "waybackLoved" };
+    const state = {
+      current: "tonight",
+      unlocked: new Set(["tonight"]),
+      selectedMini: [],
+      branch: null
+    };
+
+    const segments = {
+      tonight: {
+        index: 1,
+        title: "今晚",
+        label: "Segment 1 - Welcome letter",
         image: "assets/scenes/rooftop.png",
-        intro: "The stairwell opens under the night sky. The letters float toward the podium.",
-        answer: "prom",
-        hint: "The collected letters spell the question.",
-        reward: "The final letter is a question mark.",
-        clues: [
-          { x: 38, y: 45, title: "Floating Letters", body: "P R O M drift into place above the skyline." }
-        ]
+        caption: "Exactly 365 days ago, in the beautiful night, at 1 am, something finally became honest.",
+        intro: "No game here. Just a letter before tomorrow starts.",
+        pass: "060625",
+        hint: "今晚的日期密码.",
+        next: "finch",
+        cards: [
+          ["365 days", "Exactly 365 days ago, in the beautiful night, at 1 am, 我们把话说开了，也决定了我们要在一起."],
+          ["The second day", "我们呢也在第二天的白天，经过我的表白（抱歉当时真的太太太紧张了 有点不会说话了哈哈哈）."]
+        ],
+        letter: "Hi poopoo, I bet this is a surprise 嘿嘿,\n\n这里有一些充满着我们回忆的小游戏，祝你玩得开心~\n\nExactly 365 days ago, in the beautiful night, at 1 am, 我们把话说开了，也决定了我们要在一起。\n\n我们呢也在第二天的白天，经过我的表白（抱歉当时真的太太太紧张了 有点不会说话了哈哈哈）正式开始了这一段我最珍惜的关系。"
+      },
+      finch: {
+        index: 2,
+        title: "Finch",
+        label: "Segment 2 - Snow turning point",
+        image: "assets/scenes/school.png",
+        caption: "Back here again: snow, a long conversation, and the first hug.",
+        intro: "A tiny text puzzle about the BIG SCARY SAD CRYING TURNING POINT.",
+        pass: "0203",
+        hint: "The password is the date/code you will give her at Finch.",
+        next: "bbq",
+        mini: "finch",
+        cards: [
+          ["Anddd we are back here baby", "Remember in the snow, this was the first time we had a long conversation in person, AND A HUG."],
+          ["Turning point", "This, in our relation-pre-ship, was known as the BIG SCARY SAD CRYING TURNING POINT. 嗯也是回暖的关键转折点。"],
+          ["Pocket thought", "我猜你一定不知道我们在雪中走的时候我有多想上去牵住你的手，放进我的口袋里。"],
+          ["Tiny mystery", "I don’t remember, did we even order anything?"]
+        ],
+        letter: "Anddd we are back here baby.\n\nRemember in the snow, this was the first time we had a long conversation in person, AND A HUG.\n\nThis, in our relation-pre-ship, was known as the BIG SCARY SAD CRYING TURNING POINT. 嗯也是回暖的关键转折点。\n\n我猜你一定不知道我们在雪中走的时候我有多想上去牵住你的手，放进我的口袋里。\n\nI don’t remember, did we even order anything?"
+      },
+      bbq: {
+        index: 3,
+        title: "BBQ",
+        label: "Segment 3 - Concert night",
+        image: "assets/scenes/mcdonalds.png",
+        caption: "Concert, sleepiness, barbecue, the stage girl, and the unmatched 酸奶皮子.",
+        intro: "Build the BBQ memory plate, then use the passcode from tomorrow.",
+        pass: "陶吉吉",
+        hint: "The password is the Chinese name you will give her for BBQ.",
+        next: "wayback",
+        mini: "bbq",
+        cards: [
+          ["First concert", "我们第一场一起看的演唱会."],
+          ["Sleepy BBQ", "你扛着困意陪我来吃烧烤，还遇见了上台的那个小姐姐."],
+          ["酸奶皮子", "最最好吃的酸奶皮子。在那以后没有遇见any 酸奶 that’s remotely comparable."],
+          ["Maybe", "Maybe, it’s the experience with you that made it so tasteful~."]
+        ],
+        letter: "我们第一场一起看的演唱会。\n\n你扛着困意陪我来吃烧烤，还遇见了上台的那个小姐姐 and 最最好吃的酸奶皮子。\n\n在那以后没有遇见 any 酸奶 that’s remotely comparable.\n\nMaybe, it’s the experience with you that made it so tasteful~."
+      },
+      wayback: {
+        index: 4,
+        title: "Way back / going home",
+        label: "Segment 4 - Choose the way home",
+        image: "assets/scenes/cafe.png",
+        caption: "Two passwords, two versions of the way back.",
+        intro: "This segment branches depending on the password you give her in person.",
+        pass: ["I love you", "I loved you"],
+        hint: "Version 1 password: I love you. Version 2 password: I loved you.",
+        mini: "branch",
+        cards: [
+          ["Version 1", "Password: I love you. Opens 99个喜欢你的原因."],
+          ["Version 2", "Password: I loved you. Opens an empty letter placeholder for later."]
+        ],
+        letter: "Way back will have two different pathways, depending on the password provided.\n\nVersion 1: I love you\nVersion 2: I loved you"
+      },
+      waybackLove: {
+        index: 5,
+        title: "Way back - Version 1",
+        label: "Segment 5 - 99 reasons",
+        image: "assets/scenes/house.png",
+        caption: "99个喜欢你的原因. This one is intentionally unfinished so you can add more.",
+        intro: "A soft little reason wall. Add the rest later.",
+        final: true,
+        editable: "reasons",
+        cards: [
+          ["Reason 1", "三观！！！理念，真的很好。喜欢为了心中所想的正义与美好，不求回报所付出的你。"],
+          ["Reason 2", "今天第一次跟我闹小脾气了哈哈哈哈 也太可爱了吧"],
+          ["Reason 3", "永远为他人着想"],
+          ["Reason 4", "你就是傲娇 I know you love me :>"]
+        ],
+        letter: "99个喜欢你的原因：\n\n1. 三观！！！理念，真的很好。喜欢为了心中所想的正义与美好，不求回报所付出的你。\n2. 今天第一次跟我闹小脾气了哈哈哈哈 也太可爱了吧\n3. 永远为他人着想\n4. 你就是傲娇 I know you love me :>\n5. ...\n\nDO NOT IMPLEMENT - I WILL ADD LATER"
+      },
+      waybackLoved: {
+        index: 6,
+        title: "Way back - Version 2",
+        label: "Segment 6 - Letter placeholder",
+        image: "assets/scenes/rooftop.png",
+        caption: "A second version for the way home. Empty for now.",
+        intro: "This path is intentionally blank so you can write the letter later.",
+        final: true,
+        editable: "letter",
+        cards: [
+          ["Letter draft", "Leave empty for now. You can write this later."]
+        ],
+        letter: ""
       }
-    ];
+    };
 
-    let scenes = loadScenes();
-
-    let sceneIndex = 0;
-    const found = scenes.map(() => new Set());
-    const collectedLetters = ["_", "_", "_", "_", "_"];
-
+    const savedNotes = loadSavedNotes();
+    const wall = document.querySelector("#wall");
     const sceneImage = document.querySelector("#sceneImage");
-    const hotspots = document.querySelector("#hotspots");
-    const floorPill = document.querySelector("#floorPill");
-    const lettersEl = document.querySelector("#letters");
-    const theme = document.querySelector("#theme");
-    const sceneTitle = document.querySelector("#sceneTitle");
-    const sceneIntro = document.querySelector("#sceneIntro");
-    const clueList = document.querySelector("#clueList");
-    const passwordInput = document.querySelector("#passwordInput");
+    const caption = document.querySelector("#caption");
+    const progress = document.querySelector("#progress");
+    const memoryStack = document.querySelector("#memoryStack");
+    const minigame = document.querySelector("#minigame");
+    const segmentLabel = document.querySelector("#segmentLabel");
+    const segmentTitle = document.querySelector("#segmentTitle");
+    const segmentIntro = document.querySelector("#segmentIntro");
+    const letterPanel = document.querySelector("#letterPanel");
+    const lockPanel = document.querySelector("#lockPanel");
+    const passInput = document.querySelector("#passInput");
     const feedback = document.querySelector("#feedback");
     const startModal = document.querySelector("#startModal");
-    const noteModal = document.querySelector("#noteModal");
-    const endingModal = document.querySelector("#endingModal");
-    const noteImage = document.querySelector("#noteImage");
-    const editorModal = document.querySelector("#editorModal");
-    const editSceneSelect = document.querySelector("#editSceneSelect");
-    const editTitle = document.querySelector("#editTitle");
-    const editTheme = document.querySelector("#editTheme");
-    const editIntro = document.querySelector("#editIntro");
-    const editAnswer = document.querySelector("#editAnswer");
-    const editHint = document.querySelector("#editHint");
-    const editReward = document.querySelector("#editReward");
-    const clueEditorList = document.querySelector("#clueEditorList");
-    let editingSceneIndex = 0;
 
-    document.querySelector("#startGame").addEventListener("click", () => startModal.classList.add("hidden"));
-    document.querySelector("#closeNote").addEventListener("click", () => noteModal.classList.add("hidden"));
-    document.querySelector("#submitPassword").addEventListener("click", submitPassword);
-    document.querySelector("#hintButton").addEventListener("click", showHint);
-    document.querySelector("#editButton").addEventListener("click", openEditor);
-    document.querySelector("#closeEditorButton").addEventListener("click", closeEditor);
-    document.querySelector("#saveEditorButton").addEventListener("click", saveEditor);
-    document.querySelector("#addClueButton").addEventListener("click", addEditorClue);
-    document.querySelector("#resetEditorButton").addEventListener("click", resetEditorDefaults);
-    editSceneSelect.addEventListener("change", () => {
-      applyEditorFormToScene();
-      editingSceneIndex = Number(editSceneSelect.value);
-      renderEditorScene();
-    });
-    document.querySelectorAll(".ending-choice").forEach((button) => {
-      button.addEventListener("click", () => {
-        document.querySelector("#endingModal p:nth-of-type(2)").textContent = "YES. Fireworks bloom over the city. You remembered everything. So did I.";
-        document.querySelectorAll(".ending-choice").forEach((choice) => choice.classList.add("hidden"));
-      });
-    });
-    passwordInput.addEventListener("keydown", (event) => {
-      if (event.key === "Enter") submitPassword();
+    document.querySelector("#startButton").addEventListener("click", () => startModal.classList.add("hidden"));
+    document.querySelector("#unlockButton").addEventListener("click", unlock);
+    document.querySelector("#hintButton").addEventListener("click", () => feedback.textContent = currentSegment().hint || "No hint for this one.");
+    passInput.addEventListener("keydown", (event) => {
+      if (event.key === "Enter") unlock();
     });
 
     function render() {
-      const scene = scenes[sceneIndex];
-      sceneImage.src = scene.image;
-      sceneImage.alt = scene.title;
-      floorPill.textContent = `Floor ${sceneIndex + 1}/5`;
-      theme.textContent = scene.theme;
-      sceneTitle.textContent = scene.title;
-      sceneIntro.textContent = scene.intro;
-      passwordInput.value = "";
-      passwordInput.placeholder = sceneIndex === 4 ? "Enter final word" : "Enter password";
+      const segment = currentSegment();
+      wall.style.setProperty("--bg", `url("${segment.image}")`);
+      sceneImage.src = segment.image;
+      sceneImage.alt = segment.title;
+      caption.textContent = segment.caption;
+      segmentLabel.textContent = segment.label;
+      segmentTitle.textContent = segment.title;
+      segmentIntro.textContent = segment.intro;
       feedback.textContent = "";
+      passInput.value = "";
 
-      lettersEl.innerHTML = collectedLetters.map((letter) => `<span class="letter ${letter !== "_" ? "filled" : ""}">${letter}</span>`).join("");
-      hotspots.innerHTML = "";
-      scene.clues.forEach((clue, index) => {
-        const button = document.createElement("button");
-        button.className = `hotspot ${found[sceneIndex].has(index) ? "found" : ""}`;
-        button.style.left = `${clue.x}%`;
-        button.style.top = `${clue.y}%`;
-        button.title = clue.title;
-        button.addEventListener("click", () => openClue(index));
-        hotspots.append(button);
-      });
-      renderClues();
-    }
-
-    function renderClues() {
-      const list = [...found[sceneIndex]];
-      clueList.innerHTML = list.length
-        ? list.map((index) => {
-          const clue = scenes[sceneIndex].clues[index];
-          const image = clue.image ? `<img class="text-image" src="${escapeAttr(clue.image)}" alt="${escapeAttr(clue.title)}">` : "";
-          return `<li><strong>${escapeHtml(clue.title)}</strong><br>${escapeHtml(clue.body)}${image}</li>`;
-        }).join("")
-        : "<li>No clues found yet. Click the glowing points in the scene.</li>";
-    }
-
-    function openClue(index) {
-      found[sceneIndex].add(index);
-      const clue = scenes[sceneIndex].clues[index];
-      document.querySelector("#noteType").textContent = "Clue Found";
-      document.querySelector("#noteTitle").textContent = clue.title;
-      document.querySelector("#noteBody").textContent = clue.body;
-      showNoteImage(clue.image, clue.title);
-      noteModal.classList.remove("hidden");
-      render();
-    }
-
-    function submitPassword() {
-      const scene = scenes[sceneIndex];
-      const answer = clean(passwordInput.value);
-      if (answer !== clean(scene.answer)) {
-        feedback.textContent = "That lock stays closed. Check your clues.";
-        return;
-      }
-      collectedLetters[sceneIndex] = letters[sceneIndex];
-      if (sceneIndex === scenes.length - 1) {
-        render();
-        endingModal.classList.remove("hidden");
-        return;
-      }
-      showReward(scene.reward);
-      sceneIndex += 1;
-      setTimeout(render, 650);
-    }
-
-    function showHint() {
-      feedback.textContent = scenes[sceneIndex].hint;
-    }
-
-    function showReward(message) {
-      document.querySelector("#noteType").textContent = `Letter ${letters[sceneIndex]} Collected`;
-      document.querySelector("#noteTitle").textContent = letters[sceneIndex];
-      document.querySelector("#noteBody").textContent = message;
-      showNoteImage("", "");
-      noteModal.classList.remove("hidden");
-    }
-
-    function showNoteImage(src, alt) {
-      if (src) {
-        noteImage.src = src;
-        noteImage.alt = alt || "Clue image";
-        noteImage.classList.remove("hidden");
-      } else {
-        noteImage.removeAttribute("src");
-        noteImage.alt = "";
-        noteImage.classList.add("hidden");
-      }
-    }
-
-    function openEditor() {
-      editingSceneIndex = sceneIndex;
-      editSceneSelect.innerHTML = scenes.map((scene, index) => `<option value="${index}">${index + 1}. ${escapeHtml(scene.title)}</option>`).join("");
-      editSceneSelect.value = String(editingSceneIndex);
-      renderEditorScene();
-      editorModal.classList.remove("hidden");
-    }
-
-    function closeEditor() {
-      editorModal.classList.add("hidden");
-    }
-
-    function renderEditorScene() {
-      const scene = scenes[editingSceneIndex];
-      editTitle.value = scene.title;
-      editTheme.value = scene.theme;
-      editIntro.value = scene.intro;
-      editAnswer.value = scene.answer;
-      editHint.value = scene.hint;
-      editReward.value = scene.reward;
-      clueEditorList.innerHTML = scene.clues.map((clue, index) => `
-        <div class="clue-editor" data-clue-index="${index}">
-          <div class="field">
-            <label>X %</label>
-            <input data-clue-field="x" type="number" min="0" max="100" step="1" value="${Number(clue.x) || 50}">
-          </div>
-          <div class="field">
-            <label>Y %</label>
-            <input data-clue-field="y" type="number" min="0" max="100" step="1" value="${Number(clue.y) || 50}">
-          </div>
-          <div class="field">
-            <label>Clue title</label>
-            <input data-clue-field="title" value="${escapeAttr(clue.title)}">
-          </div>
-          <button class="secondary delete-clue" type="button" data-delete-clue="${index}">Delete</button>
-          <textarea data-clue-field="body" aria-label="Clue body">${escapeHtml(clue.body)}</textarea>
-          <div class="clue-image-fields">
-            <div class="field">
-              <label>Image URL</label>
-              <input data-clue-field="image" value="${escapeAttr(clue.image || "")}" placeholder="https://... or uploaded image">
-            </div>
-            <div class="field">
-              <label>Upload image</label>
-              <input data-image-upload="${index}" type="file" accept="image/*">
-            </div>
-          </div>
-          ${clue.image ? `<img class="image-preview" src="${escapeAttr(clue.image)}" alt="Clue image preview">` : ""}
-        </div>
+      progress.innerHTML = Array.from({ length: 6 }, (_, i) => `<span class="dot ${i + 1 <= segment.index ? "active" : ""}"></span>`).join("");
+      memoryStack.innerHTML = segment.cards.map(([title, body], index) => `
+        <article class="memory-card ${segment.mini ? "clickable" : ""}" data-card="${index}">
+          <strong>${escapeHtml(title)}</strong>
+          ${escapeHtml(body)}
+        </article>
       `).join("");
-      clueEditorList.querySelectorAll(".delete-clue").forEach((button) => {
+
+      renderLetter(segment);
+      renderMini(segment);
+
+      lockPanel.classList.toggle("hidden", Boolean(segment.final));
+      if (segment.final) passInput.value = "";
+    }
+
+    function renderLetter(segment) {
+      const saved = savedNotes[segment.editable];
+      const text = saved ?? segment.letter;
+      if (!segment.editable) {
+        letterPanel.textContent = text;
+        return;
+      }
+
+      letterPanel.innerHTML = `
+        <textarea id="editableText">${escapeHtml(text)}</textarea>
+        <div class="row">
+          <button id="saveEditable">Save This Text</button>
+          <button class="secondary" id="resetEditable">Reset</button>
+        </div>
+        <div class="editable-note">Saved only in this browser for now, so you can fill it in later.</div>
+      `;
+      document.querySelector("#saveEditable").addEventListener("click", () => {
+        savedNotes[segment.editable] = document.querySelector("#editableText").value;
+        saveNotes();
+      });
+      document.querySelector("#resetEditable").addEventListener("click", () => {
+        delete savedNotes[segment.editable];
+        saveNotes();
+        render();
+      });
+    }
+
+    function renderMini(segment) {
+      state.selectedMini = [];
+      if (!segment.mini) {
+        minigame.innerHTML = `<p class="minigame-title">Memory mode</p><div class="choice-row"><span class="pill">Read the letter, then use tomorrow's password.</span></div>`;
+        return;
+      }
+
+      if (segment.mini === "finch") {
+        minigame.innerHTML = `
+          <p class="minigame-title">Mini game - snow walk order</p>
+          <div class="choice-row">
+            ${["long conversation", "hug", "turning point", "pocket hand"].map(item => `<button class="secondary mini-choice" data-value="${item}">${item}</button>`).join("")}
+          </div>
+          <div class="feedback" id="miniFeedback">Pick the memory beats in any order to warm up the scene.</div>
+        `;
+        bindMiniChoices(4, "The snow feels warmer now.");
+      }
+
+      if (segment.mini === "bbq") {
+        minigame.innerHTML = `
+          <p class="minigame-title">Mini game - BBQ plate</p>
+          <div class="choice-row">
+            ${["concert", "sleepy bbq", "stage girl", "酸奶皮子"].map(item => `<button class="secondary mini-choice" data-value="${item}">${item}</button>`).join("")}
+          </div>
+          <div class="feedback" id="miniFeedback">Collect the pieces of the night.</div>
+        `;
+        bindMiniChoices(4, "Plate complete. Somehow the 酸奶 still wins.");
+      }
+
+      if (segment.mini === "branch") {
+        minigame.innerHTML = `
+          <p class="minigame-title">Branching path</p>
+          <div class="choice-row">
+            <span class="pill">I love you -> Version 1</span>
+            <span class="pill">I loved you -> Version 2</span>
+          </div>
+        `;
+      }
+    }
+
+    function bindMiniChoices(target, doneText) {
+      document.querySelectorAll(".mini-choice").forEach(button => {
         button.addEventListener("click", () => {
-          applyEditorFormToScene();
-          scenes[editingSceneIndex].clues.splice(Number(button.dataset.deleteClue), 1);
-          renderEditorScene();
-        });
-      });
-      clueEditorList.querySelectorAll("[data-image-upload]").forEach((input) => {
-        input.addEventListener("change", async () => {
-          if (!input.files || !input.files[0]) return;
-          const index = Number(input.dataset.imageUpload);
-          const dataUrl = await imageFileToDataUrl(input.files[0]);
-          applyEditorFormToScene();
-          scenes[editingSceneIndex].clues[index].image = dataUrl;
-          renderEditorScene();
+          button.classList.add("selected");
+          if (!state.selectedMini.includes(button.dataset.value)) state.selectedMini.push(button.dataset.value);
+          document.querySelector("#miniFeedback").textContent = state.selectedMini.length >= target ? doneText : `${state.selectedMini.length}/${target} memories collected.`;
         });
       });
     }
 
-    function applyEditorFormToScene() {
-      const scene = scenes[editingSceneIndex];
-      scene.title = editTitle.value.trim() || "Untitled Scene";
-      scene.theme = editTheme.value.trim() || `Floor ${editingSceneIndex + 1}`;
-      scene.intro = editIntro.value.trim();
-      scene.answer = editAnswer.value.trim();
-      scene.hint = editHint.value.trim();
-      scene.reward = editReward.value.trim();
-      scene.clues = [...clueEditorList.querySelectorAll(".clue-editor")].map((row) => ({
-        x: clampNumber(row.querySelector('[data-clue-field="x"]').value, 0, 100, 50),
-        y: clampNumber(row.querySelector('[data-clue-field="y"]').value, 0, 100, 50),
-        title: row.querySelector('[data-clue-field="title"]').value.trim() || "New Clue",
-        body: row.querySelector('[data-clue-field="body"]').value.trim() || "Write your clue text here.",
-        image: row.querySelector('[data-clue-field="image"]').value.trim()
-      }));
+    function unlock() {
+      const segment = currentSegment();
+      const typed = normalize(passInput.value);
+      if (Array.isArray(segment.pass)) {
+        if (typed === normalize("I love you")) {
+          state.branch = "love";
+          state.current = branchOrder.love;
+          render();
+          return;
+        }
+        if (typed === normalize("I loved you")) {
+          state.branch = "loved";
+          state.current = branchOrder.loved;
+          render();
+          return;
+        }
+      } else if (typed === normalize(segment.pass)) {
+        state.current = segment.next;
+        render();
+        return;
+      }
+      feedback.textContent = "Not this password. Wait for the password from tomorrow's event.";
     }
 
-    function saveEditor() {
-      applyEditorFormToScene();
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(scenes));
-      editorModal.classList.add("hidden");
-      editSceneSelect.innerHTML = "";
-      render();
-      feedback.textContent = "Saved your edits.";
+    function currentSegment() {
+      return segments[state.current];
     }
 
-    function addEditorClue() {
-      applyEditorFormToScene();
-      scenes[editingSceneIndex].clues.push({
-        x: 50,
-        y: 50,
-        title: "New Clue",
-        body: "Write your clue text here.",
-        image: ""
-      });
-      renderEditorScene();
+    function normalize(value) {
+      return String(value || "")
+        .trim()
+        .toLowerCase()
+        .replace(/[，。！？、；：,.!?;:'"“”‘’（）()\-_\s]+/g, "");
     }
 
-    function imageFileToDataUrl(file) {
-      return new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onerror = () => reject(reader.error);
-        reader.onload = () => {
-          const image = new Image();
-          image.onerror = () => resolve(reader.result);
-          image.onload = () => {
-            const maxWidth = 900;
-            const scale = Math.min(1, maxWidth / image.width);
-            const canvas = document.createElement("canvas");
-            canvas.width = Math.max(1, Math.round(image.width * scale));
-            canvas.height = Math.max(1, Math.round(image.height * scale));
-            const ctx = canvas.getContext("2d");
-            ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
-            resolve(canvas.toDataURL("image/jpeg", 0.82));
-          };
-          image.src = reader.result;
-        };
-        reader.readAsDataURL(file);
-      });
-    }
-
-    function resetEditorDefaults() {
-      if (!confirm("Reset all edited text and clues back to the defaults?")) return;
-      scenes = cloneDefaultScenes();
-      localStorage.removeItem(STORAGE_KEY);
-      found.forEach((set) => set.clear());
-      collectedLetters.fill("_");
-      sceneIndex = 0;
-      editingSceneIndex = 0;
-      editorModal.classList.add("hidden");
-      render();
-    }
-
-    function loadScenes() {
+    function loadSavedNotes() {
       try {
-        const saved = JSON.parse(localStorage.getItem(STORAGE_KEY));
-        if (Array.isArray(saved) && saved.length === defaultScenes.length) return saved;
-      } catch (error) {}
-      return cloneDefaultScenes();
+        return JSON.parse(localStorage.getItem(STORAGE)) || {};
+      } catch {
+        return {};
+      }
     }
 
-    function cloneDefaultScenes() {
-      return JSON.parse(JSON.stringify(defaultScenes));
-    }
-
-    function clampNumber(value, min, max, fallback) {
-      const number = Number(value);
-      if (!Number.isFinite(number)) return fallback;
-      return Math.min(max, Math.max(min, number));
+    function saveNotes() {
+      localStorage.setItem(STORAGE, JSON.stringify(savedNotes));
     }
 
     function escapeHtml(value) {
@@ -898,14 +736,6 @@
         .replaceAll(">", "&gt;")
         .replaceAll('"', "&quot;")
         .replaceAll("'", "&#039;");
-    }
-
-    function escapeAttr(value) {
-      return escapeHtml(value).replaceAll("\n", " ");
-    }
-
-    function clean(value) {
-      return value.toLowerCase().replace(/[^a-z0-9]/g, "");
     }
 
     render();
